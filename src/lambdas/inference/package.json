@@ -1,0 +1,27 @@
+{
+  "name": "tw-aichatbot-inference",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "node local.mjs",
+    "clean": "rimraf dist lambda lambda.zip",
+    "build:lambda": "esbuild index.mjs --bundle --minify --sourcemap --platform=node --target=es2020 --outfile=lambda/index.js && cp lambda-runner.sh lambda/run.sh",
+    "zip:lambda": "cd lambda && zip -r -9 ../lambda.zip ./* && cd ..",
+    "lambda": "npm run clean && npm run build:lambda && npm run zip:lambda"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "js-yaml": "^4.1.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@aws-sdk/types": "^3.901.0",
+    "esbuild": "^0.25.10",
+    "rimraf": "^6.0.1"
+  }
+}
