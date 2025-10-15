@@ -3,35 +3,35 @@ import { Construct } from 'constructs';
 
 const DEFAULT_ENV_VARS = {
   AWS_LAMBDA_EXEC_WRAPPER: '/opt/bootstrap',
-  AWS_LWA_INVOKE_MODE: 'response_stream',
   AWS_LWA_PORT: '3000',
   RUN_IN_LAMBDA: 'true',
 };
 
-export function createInferenceLambda(scope: Construct, stage: string): {
+export function createDspMcpLambda(scope: Construct, stage: string): {
   func: aws_lambda.Function,
   funcUrl: aws_lambda.FunctionUrl
- } {
-  const functionName = 'InferenceFunction';
-  const functionUrlName = 'InferenceFunctionUrl';
-  const configParamName = 'InferenceConfig';
+} {
+  const functionName = 'DspMcpFunction';
+  const functionUrlName = 'DspMcpFunctionUrl';
+  const configParamName = 'DspMcpConfig';
+  const webAdapterName = 'DspMcpWebAdapterLayer';
 
   const configParam = aws_ssm.StringParameter.fromStringParameterAttributes(
     scope,
     configParamName,
     {
-      parameterName: `/${stage.toLowerCase()}/aichatbot/inference/config`,
+      parameterName: `/${stage.toLowerCase()}/aichatbot/dspmcp/config`,
     },
   );
 
   const lambdaWebAdapterLayer = aws_lambda.LayerVersion.fromLayerVersionArn(
     scope,
-    'LambdaWebAdapterLayer',
+    webAdapterName,
     'arn:aws:lambda:us-east-1:753240598075:layer:LambdaAdapterLayerX86:25'
   );
 
   const func = new aws_lambda.Function(scope, functionName, {
-    code: aws_lambda.Code.fromAsset('../src/lambdas/inference/lambda.zip'),
+    code: aws_lambda.Code.fromAsset('../src/lambdas/dspmcp/lambda.zip'),
     runtime: aws_lambda.Runtime.NODEJS_22_X,
     handler: 'run.sh',
     architecture: aws_lambda.Architecture.X86_64,
@@ -49,7 +49,7 @@ export function createInferenceLambda(scope: Construct, stage: string): {
   const funcUrl = new aws_lambda.FunctionUrl(scope, functionUrlName, {
     function: func,
     authType: aws_lambda.FunctionUrlAuthType.NONE,
-    invokeMode: aws_lambda.InvokeMode.RESPONSE_STREAM,
+    invokeMode: aws_lambda.InvokeMode.BUFFERED,
     cors: {
         allowCredentials: true,
         allowedHeaders: [
@@ -60,6 +60,7 @@ export function createInferenceLambda(scope: Construct, stage: string): {
           'content-type',
           'accept',
           'authorization',
+          'mcp-session-id',
         ],
         allowedMethods: [aws_lambda.HttpMethod.ALL],
         allowedOrigins: ['*'],

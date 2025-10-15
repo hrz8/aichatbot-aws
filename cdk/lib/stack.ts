@@ -1,6 +1,7 @@
 import { Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { createInferenceLambda } from './lambda';
+import { createInferenceLambda } from './lambda_inference';
+import { createDspMcpLambda } from './lambda_dspmcp';
 
 const stackName = 'AichatbotStack';
 
@@ -13,5 +14,6 @@ export class AichatbotStack extends Stack {
     super(scope, stackName, props);
 
     createInferenceLambda(this, props.stageName);
+    createDspMcpLambda(this, props.stageName);
   }
 }

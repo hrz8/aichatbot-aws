@@ -1,0 +1,66 @@
+import express from 'express';
+import cors from 'cors';
+
+import type { TransportMap } from '../transports/types.js';
+
+import { clientToServerHandler, serverToClientHandler } from './routes.js';
+import { MCP_SERVER_VERSION, MCP_SERVER_NAME } from '../utils/config.js';
+
+const RUN_IN_LAMBDA = process.env.RUN_IN_LAMBDA === 'true';
+const MCP_PATH = '/mcp';
+
+function registerMiddlewares(app: express.Express) {
+  app.use(cors({
+    origin: '*',
+    exposedHeaders: ['Mcp-Session-Id'],
+    allowedHeaders: ['Content-Type', 'mcp-session-id'],
+  }));
+
+  app.use(express.json());
+}
+
+function registerRoutes(app: express.Express, transports: TransportMap) {
+  // Handle POST requests for client-to-server communication
+  app.post(MCP_PATH, clientToServerHandler(transports));
+
+  // Handle GET requests for server-to-client notifications via SSE
+  app.get(MCP_PATH, serverToClientHandler(transports));
+
+  // Handle DELETE requests for session termination
+  app.delete(MCP_PATH, serverToClientHandler(transports));
+}
+
+export function createExpressApp(
+  transports: TransportMap,
+): express.Express {
+  const app = express();
+
+  registerMiddlewares(app);
+
+  app.get('/health', (req, res) => {
+    res.json({
+      status: 'healthy',
+      server: MCP_SERVER_NAME,
+      version: MCP_SERVER_VERSION,
+      mode: RUN_IN_LAMBDA ? 'stateless-lambda' : 'stateful',
+      transport: 'streamable-http',
+      sessions: RUN_IN_LAMBDA ? 0 : transports.size,
+    });
+  });
+
+  registerRoutes(app, transports);
+
+  app.use(
+    (
+      err: unknown,
+      req: express.Request,
+      res: express.Response,
+      next: express.NextFunction,
+    ) => {
+      console.error('Unhandled error:', err);
+      res.status(500).json({ error: 'Internal Server Error' });
+    },
+  );
+
+  return app;
+}

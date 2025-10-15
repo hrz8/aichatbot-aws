@@ -1,13 +1,21 @@
-import { app } from './app.mjs';
+import type { TransportMap } from './transports/types.js';
 
-const PORT = process.env.PORT || 3048;
+import { createExpressApp } from './app/index.js';
+
+const transports: TransportMap = new Map();
+const app = createExpressApp(transports);
 
 const SERVER_PORT = process.env.RUN_IN_LAMBDA === 'true'
   ? Number(process.env.AWS_LWA_PORT)
-  : Number(PORT);
+  : 3000;
+
+if (process.env.RUN_IN_LAMBDA !== 'true') {
+  console.error('Cannot proceed inside non-lambda environment');
+  process.exit(1);
+}
 
 app.listen(SERVER_PORT, () => {
-  console.log(`listening on http://localhost:${SERVER_PORT}`)
+  console.info(`listening on http://localhost:${SERVER_PORT}`);
 });
 
 async function cleanup() {
