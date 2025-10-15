@@ -7,8 +7,7 @@ if (process.env.RUN_IN_LAMBDA !== 'true') {
 }
 
 const configSchema = z.object({
-  DSP_API_SUBSCRIPTION_KEY: z.string().optional(),
-  EMBEDDING_MODEL: z.string().optional(),
+  EMBEDDING_MODEL: z.string(),
 });
 
 function loadConfig() {
@@ -34,7 +33,6 @@ function loadConfig() {
 const config = Object.freeze(loadConfig());
 
 export const {
-  DSP_API_SUBSCRIPTION_KEY,
   EMBEDDING_MODEL,
 } = config;
 

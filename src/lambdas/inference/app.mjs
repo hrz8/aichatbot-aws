@@ -1,11 +1,11 @@
 import express from 'express';
-import { DSP_API_SUBSCRIPTION_KEY, EMBEDDING_MODEL } from './config.mjs';
+import { EMBEDDING_MODEL } from './config.mjs';
 
 const app = express();
 app.use(express.json());
 
 app.get('/', (req, res) => {
-  res.status(200).json({ message: `Hello from streaming test lambda! DSP_API_SUBSCRIPTION_KEY: ${DSP_API_SUBSCRIPTION_KEY} EMBEDDING_MODEL: ${EMBEDDING_MODEL}` });
+  res.status(200).json({ message: `Hello from streaming test lambda! EMBEDDING_MODEL: ${EMBEDDING_MODEL}` });
 });
 
 app.get('/healthz', (req, res) => {
